@@ -3,23 +3,50 @@
 // Importamos useForm de react-hook-form para manejar el formulario
 import { useForm } from "react-hook-form";
 import Error from "./Error";
+import { toast } from "react-toastify";
 import type { DraftPatient } from "../types";
 import { usePatientStore } from "../store/store";
+import { useEffect } from "react";
 
 export default function PatientForm() {
   // Importamos el store de pacientes para manejar el estado global
   const addPatient = usePatientStore(state => state.addPatient);
+  const activeId = usePatientStore(state => state.activeId);
+  const patients = usePatientStore(state => state.patients);
+  const updatePatient = usePatientStore(state => state.updatePatient);
+  
   // Configuración de react-hook-form
   // Se utiliza para manejar formularios de manera sencilla
   const {
     register,
     handleSubmit,
-    formState: { errors, reset },
+    setValue,
+    formState: { errors }, reset
   } = useForm<DraftPatient>();
 
+  // usamos useEffect para editar el paciente del formulario
+  useEffect(() => {
+    if(activeId) {
+      const activePatient = patients.filter(patient => patient.id === activeId)[0]
+      setValue('name', activePatient.name)
+      setValue('caretaker', activePatient.caretaker)
+      setValue('date', activePatient.date)
+      setValue('email', activePatient.email)
+      setValue('symptoms', activePatient.symptoms)
+    }
+  }, [activeId])
+
   const registerPatient = (data: DraftPatient) => {
-    // Logica para registrar paciente
-    addPatient(data);
+    // Logica para actualizar paciente
+    if(activeId){
+      updatePatient(data)
+      toast.success('Paciente Actualizado Correctamente')
+    } else {
+      // Logica para registrar paciente
+      addPatient(data);
+      toast.success('Paciente Registrado Correctamente')
+    }
+    
     // Reiniciar el formulario después de enviar
     reset();
     // Aquí podrías agregar lógica para redirigir o mostrar un mensaje de éxito
